@@ -38,7 +38,7 @@ function theMain() {
     runMysql($newDump, $loadDump, $database, $dumpfile);
 
     // Open a browser window
-    run("open http://localhost/$safeVersion/$flavor/sugarcrm");
+    run("/usr/bin/open -a '/Applications/Google Chrome.app' --new --args '-incognito' 'http://localhost/$safeVersion/$flavor/sugarcrm'");
 }
 
 // version, flavor, sidecar, demoData, newDump, loadDump
