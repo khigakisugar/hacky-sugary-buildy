@@ -36,6 +36,9 @@ function theMain() {
         updateSubmodules();
     }
 
+    // rebuild the minified sidecar
+    run('./construct -u', "$HOMEROOT/Mango/sugarcrm/sidecar");
+
     // do a composer or npm update if needed
     if ($upDeps) {
         updateDependencies($flavor, $version);
@@ -49,12 +52,20 @@ function theMain() {
 
     // Open a browser window
     run("/usr/bin/open -a '/Applications/Google Chrome.app' --new --args '-incognito' 'http://localhost/$safeVersion/$flavor/sugarcrm'");
+
+    // Set permissions on grunt-cli
+    run("chmod u+x $HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm/sidecar/node_modules/grunt-cli/bin/grunt");
+    run("chmod u+x $HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm/node_modules/grunt-cli/bin/grunt");
+
+    // Run tests
+    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm/sidecar");
+    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm");
 }
 
 // run composer and npm updates in the install
 function updateDependencies($flavor, $version) {
-    global $HOME;
-    $loc = "$HOME/Mango/sugarcrm";
+    global $HOMEROOT;
+    $loc = "$HOMEROOT/Mango/sugarcrm";
     run("composer install", $loc);
     run("npm install", $loc);
     run("npm install", $loc . "/sidecar");
@@ -89,12 +100,19 @@ function getOptions($defaultversion, $defaultflavor) {
 
 }
 
-function run($cmd, $dir=NULL) {
+function run($cmd, $dir=NULL, $printOut=true) {
     if ($dir) {
+        error_log("%chdir: `$dir`");
         chdir($dir);
     }
+    if ($printOut) {
+        $cmd = $cmd . ' 2>&1';
+    }
     error_log("!running: `$cmd`");
-    shell_exec($cmd);
+    $return = shell_exec("$cmd");
+    if ($return) {
+        error_log($return);
+    }
 }
 
 function promptUser($prompt, $allowedValues=NULL, $default=NULL) {
@@ -217,9 +235,9 @@ function runBuild($version, $flavor, $safeVersion) {
 
 function runMysql($newDump, $loadDump, $database, $dumpfile, $dbpword) {
     if ($newDump) {
-        run("mysqldump -uroot -p$dbpword $database > $dumpfile");
+        run("mysqldump -uroot -p$dbpword $database > $dumpfile", NULL, false);
     } elseif ($loadDump) {
-        run("mysql -uroot -p$dbpword $database < $dumpfile");
+        run("mysql -uroot -p$dbpword $database < $dumpfile", NULL, false);
     }
 }
 

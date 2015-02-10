@@ -1,3 +1,4 @@
 sugarbuildconfig.ini
 *.sql
 *.swp
+npm-debug.log
