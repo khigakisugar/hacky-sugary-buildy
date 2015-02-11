@@ -10,7 +10,12 @@ function theMain() {
     // get the default values from the ini file
     error_log("pulling defaults from ini file");
     $defaultsfile = "$HOME/sugarbuildconfig.ini";
+    $keyfile = "$HOME/license.ini";
+    $key = '';
     list($defaultversion, $defaultflavor, $dbpword) = getDefaults($defaultsfile);
+    if (file_exists($keyfile)) {
+        $key = parse_ini_file($keyfile)['key'];
+    }
 
     // get the user input
     list($version, $flavor, $sidecar, $demoData, $newDump, $loadDump, $upDeps) = getOptions($defaultversion, $defaultflavor);
@@ -29,7 +34,7 @@ function theMain() {
     }
 
     // Build the config from template
-    updateConfigSi($flavor, $safeVersion, $demoData);
+    updateConfigSi($flavor, $safeVersion, $demoData, $key);
 
     // update sidecar if needed
     if ($sidecar) {
@@ -192,7 +197,7 @@ function setDefaults($defaultsfile, $version, $flavor, $dbpword) {
     fclose($defaultsrewrite);
 }
 
-function updateConfigSi($flavor, $safeVersion, $demoData) {
+function updateConfigSi($flavor, $safeVersion, $demoData, $key) {
     global $HOME, $HOMEROOT;
     $configtemplate = "$HOME/config_si.php";
     $configdestination = "$HOMEROOT/Mango/sugarcrm/config_si.php";
@@ -211,6 +216,7 @@ function updateConfigSi($flavor, $safeVersion, $demoData) {
             $line = str_replace('<FLAV>', $flavor, $line);
             $line = str_replace('<VERS>', $safeVersion, $line);
             $line = str_replace('<DEMO>', $demoData ? "true" : "false", $line);
+            $line = str_replace('<KEY>', $key, $line);
             fwrite($writehandle, $line);
         }
         fclose($readhandle);
