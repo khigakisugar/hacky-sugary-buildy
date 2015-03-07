@@ -220,7 +220,7 @@ function updateSubmodules() {
 
 function runBuild($version, $flavor, $safeVersion) {
     global $HOME, $HOMEROOT;
-    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=sugarcrm --build_dir=$HOMEROOT/Sites/$safeVersion --latin=1 --clean --cleanCache";
+    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango/sugarcrm --build_dir=$HOMEROOT/Sites/$safeVersion --latin=1 --clean --cleanCache";
     run("$buildscript", "$HOMEROOT/Mango/build/rome");
     run("curl -s 'http://localhost/$safeVersion/$flavor/sugarcrm/install.php?goto=SilentInstall&cli=true'");
 }
