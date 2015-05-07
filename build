@@ -40,14 +40,14 @@ function theMain() {
         run('./construct -u', "$HOMEROOT/Mango/sugarcrm/sidecar");
     }
 
-    // bounce apache
-    if ($bounceApache) {
-        run('sudo /usr/sbin/apachectl restart');
-    }
-
     // do a composer or npm update if needed
     if ($upDeps) {
         updateDependencies($flavor, $version);
+    }
+
+    // bounce apache
+    if ($bounceApache) {
+        run('sudo /usr/sbin/apachectl restart');
     }
 
     // Run the build
@@ -61,8 +61,8 @@ function theMain() {
     run("chmod u+x $HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm/node_modules/grunt-cli/bin/grunt");
 
     // Run tests
-    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm/sidecar");
-    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm");
+    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm/sidecar");
+    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm");
 }
 
 // run composer and npm updates in the install
@@ -78,16 +78,8 @@ function updateDependencies($flavor, $version) {
 function getOptions($defaultversion, $defaultflavor) {
     $options = getopt('h', array("help", "full", "quick", "interactive"));
     if (array_key_exists('help', $options) || array_key_exists('h', $options)) {
-        error_log(PHP_EOL . "Usage: build [-hfq] [--help] [--full] [--quick]" . PHP_EOL .
-                "-h, --help\t\tDisplay this help" . PHP_EOL .
-                "-i, --interactive\tRun in manual mode, which prompts for user input. DO THIS FIRST" . PHP_EOL .
-                "-f, --full\t\tRun in full mode, after defaults have been set in manual mode" . PHP_EOL .
-                "\t\t\tDefault Version, Default Flavor, Rebuild Sidecar, Build Demo Data, Store new MySQL dump" . PHP_EOL .
-                "\t\t\tTakes precedence over -q/--quick" . PHP_EOL .
-                "-q, --quick\t\tRun in quick mode, after defaults have been set in manual mode" . PHP_EOL .
-                "\t\t\tDefault Version, Default Flavor, Skip Sidecar, Skip Demo Data, Retrive data from MySQL dump" . PHP_EOL . PHP_EOL .
-                "When in doubt, run in the -i/--interactive mode" . PHP_EOL . PHP_EOL .
-                "You MUST have a config_si.php file in your current working directory." . PHP_EOL
+        error_log(PHP_EOL . "Usage: build [-h] [--help]" . PHP_EOL .
+                "-h, --help\t\tDisplay this help" . PHP_EOL
         );
         exit(0);
     } else {
@@ -220,7 +212,7 @@ function updateSubmodules() {
 
 function runBuild($version, $flavor, $safeVersion) {
     global $HOME, $HOMEROOT;
-    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango/sugarcrm --build_dir=$HOMEROOT/Sites/$safeVersion --latin=1 --clean --cleanCache";
+    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$HOMEROOT/Sites/$safeVersion --latin=1 --clean --cleanCache --sidecar";
     run("$buildscript", "$HOMEROOT/Mango/build/rome");
     run("curl -s 'http://localhost/$safeVersion/$flavor/sugarcrm/install.php?goto=SilentInstall&cli=true'");
 }
