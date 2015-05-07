@@ -54,7 +54,7 @@ function theMain() {
     runBuild($version, $flavor, $safeVersion);
 
     // Open a browser window
-    run("/usr/bin/open -a '/Applications/Google Chrome.app' --new --args '-incognito' 'http://localhost/$safeVersion/$flavor/sugarcrm'");
+    run("/usr/bin/open -a '/Applications/Google Chrome Canary.app' --new --args 'http://localhost/$safeVersion/$flavor/sugarcrm'");
 
     // Set permissions on grunt-cli
     run("chmod u+x $HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm/sidecar/node_modules/grunt-cli/bin/grunt");
