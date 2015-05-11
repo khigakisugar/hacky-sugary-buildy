@@ -18,7 +18,8 @@ function theMain() {
     }
 
     // get the user input
-    list($version, $flavor, $sidecar, $newMin, $upDeps, $bounceApache, $demoData) = getOptions($defaultversion, $defaultflavor);
+    list($version, $flavor) = getOptions($defaultversion, $defaultflavor);
+    $demoData = true;
     $safeVersion = str_replace(".", "_", $version);
     $database = "sugar_$safeVersion" . "_$flavor";
     $dumpfile = "$HOME/$database.sql";
@@ -30,25 +31,10 @@ function theMain() {
     // Build the config from template
     updateConfigSi($flavor, $safeVersion, $demoData, $key);
 
-    // update sidecar if needed
-    if ($sidecar) {
-        updateSubmodules();
-    }
-
-    // rebuild the minified sidecar
-    if ($newMin) {
-        run('./construct -u', "$HOMEROOT/Mango/sugarcrm/sidecar");
-    }
-
     // do a composer or npm update if needed
-    if ($upDeps) {
-        updateDependencies($flavor, $version);
-    }
+    updateDependencies($flavor, $version);
 
-    // bounce apache
-    if ($bounceApache) {
-        run('sudo /usr/sbin/apachectl restart');
-    }
+    run('sudo /usr/sbin/apachectl restart');
 
     // Run the build
     runBuild($version, $flavor, $safeVersion);
@@ -61,8 +47,8 @@ function theMain() {
     run("chmod u+x $HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm/node_modules/grunt-cli/bin/grunt");
 
     // Run tests
-    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm/sidecar");
-    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm");
+    #run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm/sidecar");
+    #run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm");
 }
 
 // run composer and npm updates in the install
@@ -157,13 +143,8 @@ function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL) {
 
     $version = promptUser("Version: [$defaultversion] ", NULL, $defaultversion);
     $flavor = promptUser("Flavor (pro, ent, ult): [$defaultflavor] ", $FLAVORARRAY, $defaultflavor);
-    $sidecar = convertYNToBoolean(promptUser("Fetch new sidecar y/[n]? ", $YNARRAY, 'n'));
-    $newMin = convertYNToBoolean(promptUser("Build new minified sidecar y/[n]? ", $YNARRAY, 'n'));
-    $upDeps = convertYNToBoolean(promptUser("Update dependencies y/[n]? ", $YNARRAY, 'n'));
-    $bounceApache = convertYNToBoolean(promptUser("restart apache y/[n]? ", $YNARRAY, 'n'));
-    $demoData = convertYNToBoolean(promptUser("Build new Demo data y/[n]? ", $YNARRAY, 'n'));
 
-    return array($version, $flavor, $sidecar, $newMin, $upDeps, $bounceApache, $demoData);
+    return array($version, $flavor);
 }
 
 function setDefaults($defaultsfile, $version, $flavor, $dbpword) {
