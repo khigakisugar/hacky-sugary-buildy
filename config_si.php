@@ -2,7 +2,7 @@
 
 $host = 'localhost';
 $flav = '<FLAV>';
-$vers = '<VERS>';
+$name = '<NAME>';
 $demoData = <DEMO>;
 $key = '<KEY>';
 
@@ -12,11 +12,11 @@ $sugar_config_si = array (
   'setup_db_admin_user_name' => 'root',
   'setup_db_pop_demo_data' => '0',
   'setup_system_name' => 'SugarCRM',
-  'setup_db_database_name' => "sugar_$vers"."_$flav",
+  'setup_db_database_name' => "sugar_$name"."_$flav",
   'export_delimiter' => ',',
   'default_language' => 'en_us',
   'default_currency_name' => 'US Dollar',
-  'setup_site_url' => "http://localhost/$vers/$flav/sugarcrm/",
+  'setup_site_url' => "http://localhost/$name/$flav/sugarcrm/",
   'default_currency_significant_digits' => '2',
   'setup_db_create_sugarsales_user' => 'false',
   'setup_site_admin_password' => 'asdf',
@@ -42,5 +42,5 @@ $sugar_config_si = array (
   'default_locale_name_format' => 's f l',
   'default_time_format' => 'H:i',
   'setup_db_drop_tables' => 'true',
-  'developerMode' => true,
+  'developerMode' => 'true',
 );

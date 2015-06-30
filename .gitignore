@@ -3,3 +3,4 @@ sugarbuildconfig.ini
 *.swp
 npm-debug.log
 license.ini
+currentbranch

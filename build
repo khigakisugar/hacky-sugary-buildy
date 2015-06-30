@@ -8,8 +8,9 @@ function theMain() {
 
     global $HOMEROOT, $HOME;
     // get the default values from the ini file
-    error_log("pulling defaults from ini file");
+    err_log("pulling defaults from ini file");
     $defaultsfile = "$HOME/sugarbuildconfig.ini";
+    $namefile = "$HOME/currentbranch";
     $keyfile = "$HOME/license.ini";
     $key = '';
     list($defaultversion, $defaultflavor, $dbpword) = getDefaults($defaultsfile);
@@ -18,37 +19,35 @@ function theMain() {
     }
 
     // get the user input
-    list($version, $flavor) = getOptions($defaultversion, $defaultflavor);
-    $demoData = true;
-    $safeVersion = str_replace(".", "_", $version);
-    $database = "sugar_$safeVersion" . "_$flavor";
-    $dumpfile = "$HOME/$database.sql";
+    list($version, $flavor, $name, $demoData) = getAllUserInput($defaultversion, $defaultflavor);
+    $database = "sugar_$name" . "_$flavor";
 
     // update ini file
-    error_log("updating defaults: version=$version, flavor=$flavor, password=$dbpword");
-    setDefaults($defaultsfile, $version, $flavor, $dbpword);
+    err_log("updating defaults: version=$version, flavor=$flavor, password=$dbpword");
+    setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile);
 
     // Build the config from template
-    updateConfigSi($flavor, $safeVersion, $demoData, $key);
+    updateConfigSi($flavor, $version, $name, $demoData, $key);
+
+    // update sidecar
+    updateSubmodules();
 
     // do a composer or npm update if needed
     updateDependencies($flavor, $version);
 
-    run('sudo /usr/sbin/apachectl restart');
-
     // Run the build
-    runBuild($version, $flavor, $safeVersion);
+    runBuild($version, $flavor, $name);
 
     // Open a browser window
-    run("/usr/bin/open -a '/Applications/Google Chrome Canary.app' --new --args 'http://localhost/$safeVersion/$flavor/sugarcrm'");
+    run("/usr/bin/open -a '/Applications/Google Chrome Canary.app' --new --args 'http://localhost/$name/$flavor/sugarcrm'");
 
     // Set permissions on grunt-cli
-    run("chmod u+x $HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm/sidecar/node_modules/grunt-cli/bin/grunt");
-    run("chmod u+x $HOMEROOT/Sites/$safeVersion/$flavor/sugarcrm/node_modules/grunt-cli/bin/grunt");
+    run("chmod u+x $HOMEROOT/Sites/$name/$flavor/sugarcrm/sidecar/node_modules/grunt-cli/bin/grunt");
+    run("chmod u+x $HOMEROOT/Sites/$name/$flavor/sugarcrm/node_modules/grunt-cli/bin/grunt");
 
     // Run tests
-    #run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm/sidecar");
-    #run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm");
+    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm/sidecar");
+    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm");
 }
 
 // run composer and npm updates in the install
@@ -60,32 +59,18 @@ function updateDependencies($flavor, $version) {
     run("npm install", $loc . "/sidecar");
 }
 
-// version, flavor, sidecar, demoData, newDump, loadDump
-function getOptions($defaultversion, $defaultflavor) {
-    $options = getopt('h', array("help", "full", "quick", "interactive"));
-    if (array_key_exists('help', $options) || array_key_exists('h', $options)) {
-        error_log(PHP_EOL . "Usage: build [-h] [--help]" . PHP_EOL .
-                "-h, --help\t\tDisplay this help" . PHP_EOL
-        );
-        exit(0);
-    } else {
-        error_log("prompting user for information");
-        return getAllUserInput($defaultversion, $defaultflavor);
-    }
-}
-
 function run($cmd, $dir=NULL, $printOut=true) {
     if ($dir) {
-        error_log("%chdir: `$dir`");
+        err_log("%chdir: `$dir`");
         chdir($dir);
     }
     if ($printOut) {
         $cmd = $cmd . ' 2>&1';
     }
-    error_log("!running: `$cmd`");
+    err_log("!running: `$cmd`");
     $return = shell_exec("$cmd");
     if ($return) {
-        error_log($return);
+        err_log($return);
     }
 }
 
@@ -95,7 +80,7 @@ function promptUser($prompt, $allowedValues=NULL, $default=NULL) {
         $userValue = strtolower(readline($prompt));
         // if answer is an empty string and default is specified, return default
         if (($userValue == "") && $default){
-            error_log("defaulting to $default");
+            err_log("defaulting to $default");
             return $default;
         }
         // check answer against allowed values.
@@ -106,7 +91,7 @@ function promptUser($prompt, $allowedValues=NULL, $default=NULL) {
             } else {
                 // invalid answer given, prompt again
                 $validAnswer = implode(", ", $allowedValues);
-                error_log("$userValue is not a valid answer. Please answer [$validAnswer]");
+                err_log("$userValue is not a valid answer. Please answer [$validAnswer]");
                 continue;
             }
         } else {
@@ -138,29 +123,38 @@ function getDefaults($defaultsfile) {
 }
 
 function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL) {
-    $FLAVORARRAY = array('pro', 'ent', 'ult');
     $YNARRAY = array('y', 'n');
+    $FLAVORARRAY = array('pro', 'corp', 'ent', 'ult');
 
-    $version = promptUser("Version: [$defaultversion] ", NULL, $defaultversion);
+    $version = promptUser("Version [$defaultversion]: ", NULL, $defaultversion);
     $flavor = promptUser("Flavor (pro, ent, ult): [$defaultflavor] ", $FLAVORARRAY, $defaultflavor);
+    $branchName = promptUser("Branch name (optional): ", NULL, NULL);
 
-    return array($version, $flavor);
+    $demoData = convertYNToBoolean(promptUser("Demo Data? (Y/n): ", $YNARRAY, 'y'));
+    $branchName = str_replace("-", "_", $branchName);
+
+    return array($version, $flavor, $branchName, $demoData);
 }
 
-function setDefaults($defaultsfile, $version, $flavor, $dbpword) {
+function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile) {
     $defaultsrewrite = fopen($defaultsfile, 'w');
     fwrite($defaultsrewrite, '[sugar]'. PHP_EOL);
     fwrite($defaultsrewrite, "version=$version" . PHP_EOL);
     fwrite($defaultsrewrite, "flavor=$flavor" . PHP_EOL);
     fwrite($defaultsrewrite, "dbpword=$dbpword" . PHP_EOL);
     fclose($defaultsrewrite);
+    if ($name) {
+        $namewrite = fopen($namefile, 'w');
+        fwrite($namefile, $name);
+        fclose($namewrite);
+    }
 }
 
-function updateConfigSi($flavor, $safeVersion, $demoData, $key) {
+function updateConfigSi($flavor, $version, $name, $demoData, $key) {
     global $HOME, $HOMEROOT;
     $configtemplate = "$HOME/config_si.php";
     $configdestination = "$HOMEROOT/Mango/sugarcrm/config_si.php";
-    error_log("updating $configdestination");
+    err_log("updating $configdestination");
     if (file_exists($configtemplate)) {
         $readhandle = fopen($configtemplate, 'r');
     } else {
@@ -173,7 +167,8 @@ function updateConfigSi($flavor, $safeVersion, $demoData, $key) {
                 break;
             }
             $line = str_replace('<FLAV>', $flavor, $line);
-            $line = str_replace('<VERS>', $safeVersion, $line);
+            $line = str_replace('<VERS>', $version, $line);
+            $line = str_replace('<NAME>', $name, $line);
             $line = str_replace('<DEMO>', $demoData ? "true" : "false", $line);
             $line = str_replace('<KEY>', $key, $line);
             fwrite($writehandle, $line);
@@ -191,12 +186,16 @@ function updateSubmodules() {
     run("git submodule update", "$HOMEROOT/Mango");
 }
 
-function runBuild($version, $flavor, $safeVersion) {
+function runBuild($version, $flavor, $name) {
     global $HOME, $HOMEROOT;
-    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$HOMEROOT/Sites/$safeVersion --latin=1 --clean --cleanCache --sidecar";
+    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$HOMEROOT/Sites/$name --latin=1 --clean --cleanCache --sidecar";
     run("$buildscript", "$HOMEROOT/Mango/build/rome");
-    run("curl -s 'http://localhost/$safeVersion/$flavor/sugarcrm/install.php?goto=SilentInstall&cli=true'");
+    run("curl -s 'http://localhost/$name/$flavor/sugarcrm/install.php?goto=SilentInstall&cli=true'");
+}
+
+function err_log($msg) {
+    fwrite(STDERR, "$msg\n");
 }
 
 theMain();
-?>
+
