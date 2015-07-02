@@ -24,7 +24,7 @@ function theMain() {
 
     // update ini file
     err_log("updating defaults: version=$version, flavor=$flavor, password=$dbpword");
-    setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile);
+    $name = setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile);
 
     // Build the config from template
     updateConfigSi($flavor, $version, $name, $demoData, $key);
@@ -147,7 +147,14 @@ function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefil
         $namewrite = fopen($namefile, 'w');
         fwrite($namefile, $name);
         fclose($namewrite);
+    } else {
+        if (file_exists($namefile)) {
+            $name = file_get_contents($namefile);
+        } else {
+            die("name file $namefile does not exist");
+        }
     }
+    return $name;
 }
 
 function updateConfigSi($flavor, $version, $name, $demoData, $key) {
