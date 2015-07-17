@@ -38,6 +38,9 @@ function theMain() {
     // Run the build
     runBuild($version, $flavor, $name);
 
+    // restart mysql
+    run("mysql.server restart");
+
     // Open a browser window
     run("/usr/bin/open -a '/Applications/Google Chrome Canary.app' --new --args 'http://localhost/$name/$flavor/sugarcrm'");
 
@@ -130,7 +133,7 @@ function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL) {
     $flavor = promptUser("Flavor (pro, ent, ult): [$defaultflavor] ", $FLAVORARRAY, $defaultflavor);
     $branchName = promptUser("Branch name (optional): ", NULL, NULL);
 
-    $demoData = convertYNToBoolean(promptUser("Demo Data? (Y/n): ", $YNARRAY, 'y'));
+    $demoData = convertYNToBoolean(promptUser("Demo Data? (y/N): ", $YNARRAY, 'n'));
     $branchName = str_replace("-", "_", $branchName);
 
     return array($version, $flavor, $branchName, $demoData);
@@ -145,7 +148,7 @@ function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefil
     fclose($defaultsrewrite);
     if ($name) {
         $namewrite = fopen($namefile, 'w');
-        fwrite($namefile, $name);
+        fwrite($namewrite, $name);
         fclose($namewrite);
     } else {
         if (file_exists($namefile)) {

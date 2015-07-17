@@ -1,5 +1,5 @@
 <?php
-
+date_default_timezone_set('America/Los_Angeles');
 //$HOME = $_SERVER['HOME'];
 $HOMEROOT = getenv('HOME');
 $HOME = realpath(__DIR__);
@@ -20,6 +20,9 @@ if (file_exists($namefile)) {
 } else {
     die("name file $namefile does not exist");
 }
+
+$defaultname = trim($defaultname);
+$defaultname = explode('~', $defaultname)[0];
 
 $defaultversion = $defaults['version'];
 $defaultflavor = $defaults['flavor'];
