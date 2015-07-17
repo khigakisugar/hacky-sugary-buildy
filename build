@@ -157,6 +157,8 @@ function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefil
             die("name file $namefile does not exist");
         }
     }
+    $name = trim($name);
+    $name = explode('~', $name)[0];
     return $name;
 }
 
