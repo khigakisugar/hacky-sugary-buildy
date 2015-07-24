@@ -14,17 +14,18 @@ function theMain() {
     $keyfile = "$HOME/license.ini";
     $key = '';
     list($defaultversion, $defaultflavor, $dbpword) = getDefaults($defaultsfile);
+    $name = getDefaultName($namefile);
     if (file_exists($keyfile)) {
         $key = parse_ini_file($keyfile)['key'];
     }
 
     // get the user input
-    list($version, $flavor, $name, $demoData) = getAllUserInput($defaultversion, $defaultflavor);
+    list($version, $flavor, $name, $demoData) = getAllUserInput($defaultversion, $defaultflavor, $name);
     $database = "sugar_$name" . "_$flavor";
 
     // update ini file
     err_log("updating defaults: version=$version, flavor=$flavor, password=$dbpword");
-    $name = setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile);
+    setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile);
 
     // Build the config from template
     updateConfigSi($flavor, $version, $name, $demoData, $key);
@@ -42,15 +43,16 @@ function theMain() {
     run("mysql.server restart");
 
     // Open a browser window
-    run("/usr/bin/open -a '/Applications/Google Chrome Canary.app' --new --args 'http://localhost/$name/$flavor/sugarcrm'");
+    run("/usr/bin/open -a '/Applications/Google Chrome Canary.app' --new --args 'http://$name.localhost/$name/$flavor/sugarcrm'");
 
     // Set permissions on grunt-cli
     run("chmod u+x $HOMEROOT/Sites/$name/$flavor/sugarcrm/sidecar/node_modules/grunt-cli/bin/grunt");
     run("chmod u+x $HOMEROOT/Sites/$name/$flavor/sugarcrm/node_modules/grunt-cli/bin/grunt");
 
     // Run tests
-    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm/sidecar");
-    run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm");
+    // Commented out, since running tests right after tends to cause file handle issues
+    //run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm/sidecar");
+    //run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm");
 }
 
 // run composer and npm updates in the install
@@ -125,18 +127,24 @@ function getDefaults($defaultsfile) {
     return array($defaultversion, $defaultflavor, $dbpword);
 }
 
-function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL) {
+function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL, $name) {
     $YNARRAY = array('y', 'n');
     $FLAVORARRAY = array('pro', 'corp', 'ent', 'ult');
 
     $version = promptUser("Version [$defaultversion]: ", NULL, $defaultversion);
     $flavor = promptUser("Flavor (pro, ent, ult): [$defaultflavor] ", $FLAVORARRAY, $defaultflavor);
-    $branchName = promptUser("Branch name (optional): ", NULL, NULL);
+    $branchName = promptUser("Branch name [$name]:", NULL, $name);
 
     $demoData = convertYNToBoolean(promptUser("Demo Data? (y/N): ", $YNARRAY, 'n'));
     $branchName = str_replace("-", "_", $branchName);
 
     return array($version, $flavor, $branchName, $demoData);
+}
+
+function getDefaultName($namefile) {
+    if (file_exists($namefile)) {
+       return file_get_contents($namefile);
+    }
 }
 
 function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile) {
@@ -147,19 +155,12 @@ function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefil
     fwrite($defaultsrewrite, "dbpword=$dbpword" . PHP_EOL);
     fclose($defaultsrewrite);
     if ($name) {
+        $name = trim($name);
+        $name = explode('~', $name)[0];
         $namewrite = fopen($namefile, 'w');
         fwrite($namewrite, $name);
         fclose($namewrite);
-    } else {
-        if (file_exists($namefile)) {
-            $name = file_get_contents($namefile);
-        } else {
-            die("name file $namefile does not exist");
-        }
     }
-    $name = trim($name);
-    $name = explode('~', $name)[0];
-    return $name;
 }
 
 function updateConfigSi($flavor, $version, $name, $demoData, $key) {
