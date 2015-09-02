@@ -3,6 +3,8 @@
 
 $HOMEROOT = getenv("HOME");
 $HOME = getcwd();
+require_once($HOME . "/remove.php");
+require_once($HOME . "/run.php");
 
 function theMain() {
 
@@ -26,6 +28,15 @@ function theMain() {
     // update ini file
     err_log("updating defaults: version=$version, flavor=$flavor, password=$dbpword");
     setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile);
+
+    // remove the existing install (if it exists)
+    err_log("checking if this has already been installed at /Users/khigaki/Sites/$name/$flavor");
+    if (file_exists("/Users/khigaki/Sites/$name/$flavor")) {
+        err_log("installation found");
+        remove($name, $flavor);
+    } else {
+        err_log("installation not found");
+    }
 
     // Build the config from template
     updateConfigSi($flavor, $version, $name, $demoData, $key);
@@ -62,21 +73,6 @@ function updateDependencies($flavor, $version) {
     run("composer install", $loc);
     run("npm install", $loc);
     run("npm install", $loc . "/sidecar");
-}
-
-function run($cmd, $dir=NULL, $printOut=true) {
-    if ($dir) {
-        err_log("%chdir: `$dir`");
-        chdir($dir);
-    }
-    if ($printOut) {
-        $cmd = $cmd . ' 2>&1';
-    }
-    err_log("!running: `$cmd`");
-    $return = shell_exec("$cmd");
-    if ($return) {
-        err_log($return);
-    }
 }
 
 function promptUser($prompt, $allowedValues=NULL, $default=NULL) {
@@ -133,7 +129,7 @@ function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL, $name) {
 
     $version = promptUser("Version [$defaultversion]: ", NULL, $defaultversion);
     $flavor = promptUser("Flavor (pro, ent, ult): [$defaultflavor] ", $FLAVORARRAY, $defaultflavor);
-    $branchName = promptUser("Branch name [$name]:", NULL, $name);
+    $branchName = promptUser("Branch name [$name]: ", NULL, $name);
 
     $demoData = convertYNToBoolean(promptUser("Demo Data? (y/N): ", $YNARRAY, 'n'));
     $branchName = str_replace("-", "_", $branchName);
@@ -210,9 +206,6 @@ function runBuild($version, $flavor, $name) {
     run("curl -s 'http://localhost/$name/$flavor/sugarcrm/install.php?goto=SilentInstall&cli=true'");
 }
 
-function err_log($msg) {
-    fwrite(STDERR, "$msg\n");
-}
 
 theMain();
 
