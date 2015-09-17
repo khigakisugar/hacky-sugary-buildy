@@ -4,6 +4,7 @@ date_default_timezone_set('America/Los_Angeles');
 $HOMEROOT = getenv('HOME');
 $HOME = realpath(__DIR__);
 $filerelativedir = $argv[1];
+$sidecar = $argv[2];
 
 $defaultsfile = "$HOME/sugarbuildconfig.ini";
 $namefile = "$HOME/currentbranch";
@@ -27,8 +28,19 @@ $defaultname = explode('~', $defaultname)[0];
 $defaultversion = $defaults['version'];
 $defaultflavor = $defaults['flavor'];
 
+$installDir = "/Users/khigaki/Sites/$defaultname/$defaultflavor";
+
+$sugarConfigFile = "$installDir/sugarcrm/config.php";
+if (file_exists($sugarConfigFile)) {
+    require_once($sugarConfigFile);
+    $defaultversion = $sugar_config['sugar_version'];
+}
+
 chdir("$HOMEROOT/Mango/build/rome");
-$buildcommand = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php ver=$defaultversion flav=$defaultflavor build_dir=$HOMEROOT/Sites/$defaultname dir=$HOMEROOT/Mango/$filerelativedir --clean=1 --cleanCache=1 --sidecar=1";
+$buildcommand = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php ver=$defaultversion flav=$defaultflavor build_dir=$HOMEROOT/Sites/$defaultname dir=$HOMEROOT/Mango/$filerelativedir --clean=1 --cleanCache=1";
+if ($sidecar) {
+    $buildcommand .= '--sidecar=1';
+}
 fwrite(STDERR, "running $buildcommand" . PHP_EOL);
 shell_exec("$buildcommand");
 fwrite(STDERR, "finished at " . date('h:i:s A') . PHP_EOL);
