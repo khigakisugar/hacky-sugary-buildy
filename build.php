@@ -42,7 +42,7 @@ function theMain() {
     updateConfigSi($flavor, $version, $name, $demoData, $key);
 
     // update sidecar
-    updateSubmodules();
+    //updateSubmodules();
 
     // do a composer or npm update if needed
     updateDependencies($flavor, $version);
@@ -139,7 +139,7 @@ function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL, $name) {
 
 function getDefaultName($namefile) {
     if (file_exists($namefile)) {
-       return file_get_contents($namefile);
+       return rtrim(file_get_contents($namefile));
     }
 }
 
@@ -192,6 +192,7 @@ function updateConfigSi($flavor, $version, $name, $demoData, $key) {
 
 function updateSubmodules() {
     global $HOMEROOT;
+    run("git fetch upstream", "$HOMEROOT/Mango/sugarcrm/sidecar");
     run("git submodule update", "$HOMEROOT/Mango");
 }
 
@@ -201,7 +202,8 @@ function runBuild($version, $flavor, $name) {
     if (file_exists($buildDir)) {
         run("rm -r $buildDir");
     }
-    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --latin=1 --clean --cleanCache --sidecar";
+    //$buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --latin=1 --clean --cleanCache --sidecar";
+    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache --sidecar";
     run("$buildscript", "$HOMEROOT/Mango/build/rome");
     run("curl -s 'http://localhost/$name/$flavor/sugarcrm/install.php?goto=SilentInstall&cli=true'");
 }

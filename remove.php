@@ -5,6 +5,7 @@ require_once($HOME . "/run.php");
 function main($argv) {
     if (!$argv[1]) {
         err_log("no args");
+        err_log("pass branch and flavor");
         return;
     }
     remove($argv[1], $argv[2]);

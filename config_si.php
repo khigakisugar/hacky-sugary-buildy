@@ -42,6 +42,5 @@ $sugar_config_si = array (
   'default_locale_name_format' => 's f l',
   'default_time_format' => 'H:i',
   'setup_db_drop_tables' => 'true',
-  'developerMode' => 'true',
-  //'developerMode' => 'false',
+  //'developerMode' => 'true',
 );

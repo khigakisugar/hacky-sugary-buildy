@@ -4,7 +4,10 @@ date_default_timezone_set('America/Los_Angeles');
 $HOMEROOT = getenv('HOME');
 $HOME = realpath(__DIR__);
 $filerelativedir = $argv[1];
-$sidecar = $argv[2];
+$sidecar = null;
+if (count($argv) > 2) {
+    $sidecar = $argv[2];
+}
 
 $defaultsfile = "$HOME/sugarbuildconfig.ini";
 $namefile = "$HOME/currentbranch";
