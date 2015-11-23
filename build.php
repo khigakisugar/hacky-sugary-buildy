@@ -54,7 +54,7 @@ function theMain() {
     run("mysql.server restart");
 
     // Open a browser window
-    run("/usr/bin/open -a '/Applications/Google Chrome.app' --new --args 'http://$name.localhost/$name/$flavor/sugarcrm'");
+    run("/usr/bin/open -a '/Applications/Google Chrome.app' --new --args 'http://$name.localhost/$name/$flavor/sugarcrm/'");
 
     // Set permissions on grunt-cli
     run("chmod u+x $HOMEROOT/Sites/$name/$flavor/sugarcrm/sidecar/node_modules/grunt-cli/bin/grunt");
