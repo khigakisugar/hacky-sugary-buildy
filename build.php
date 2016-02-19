@@ -71,8 +71,8 @@ function updateDependencies($flavor, $version) {
     global $HOMEROOT;
     $loc = "$HOMEROOT/Mango/sugarcrm";
     run("composer install", $loc);
-    run("npm install", $loc);
-    run("npm install", $loc . "/sidecar");
+    //run("npm install", $loc);
+    //run("npm install", $loc . "/sidecar");
 }
 
 function promptUser($prompt, $allowedValues=NULL, $default=NULL) {
