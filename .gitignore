@@ -4,3 +4,4 @@ sugarbuildconfig.ini
 npm-debug.log
 license.ini
 currentbranch
+config_override.php

@@ -41,9 +41,6 @@ function theMain() {
     // Build the config from template
     updateConfigSi($flavor, $version, $name, $demoData, $key);
 
-    // update sidecar
-    //updateSubmodules();
-
     // do a composer or npm update if needed
     updateDependencies($flavor, $version);
 
@@ -54,7 +51,7 @@ function theMain() {
     run("mysql.server restart");
 
     // Open a browser window
-    run("/usr/bin/open -a '/Applications/Google Chrome.app' --new --args 'http://$name.localhost/$name/$flavor/sugarcrm/'");
+    run("/usr/bin/open -a '/Applications/Google Chrome.app' --new --args 'http://$name.localdev/$name/$flavor/sugarcrm/'");
 
     // Set permissions on grunt-cli
     run("chmod u+x $HOMEROOT/Sites/$name/$flavor/sugarcrm/sidecar/node_modules/grunt-cli/bin/grunt");
@@ -66,13 +63,11 @@ function theMain() {
     //run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm");
 }
 
-// run composer and npm updates in the install
+// run composer
 function updateDependencies($flavor, $version) {
     global $HOMEROOT;
     $loc = "$HOMEROOT/Mango/sugarcrm";
     run("composer install", $loc);
-    //run("npm install", $loc);
-    //run("npm install", $loc . "/sidecar");
 }
 
 function promptUser($prompt, $allowedValues=NULL, $default=NULL) {
@@ -205,7 +200,8 @@ function runBuild($version, $flavor, $name) {
     //$buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --latin=1 --clean --cleanCache --sidecar";
     $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache --sidecar";
     run("$buildscript", "$HOMEROOT/Mango/build/rome");
-    run("curl -s 'http://localhost/$name/$flavor/sugarcrm/install.php?goto=SilentInstall&cli=true'");
+    run("cp $HOME/config_override.php $buildDir/$flavor/sugarcrm");
+    run("curl -s 'http://$name.localdev/$name/$flavor/sugarcrm/install.php?goto=SilentInstall&cli=true'");
 }
 
 
