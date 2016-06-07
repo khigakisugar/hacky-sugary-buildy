@@ -198,9 +198,11 @@ function runBuild($version, $flavor, $name) {
         run("rm -r $buildDir");
     }
     //$buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --latin=1 --clean --cleanCache --sidecar";
-    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache --sidecar";
+    //$buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache --sidecar";
+    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache";
     run("$buildscript", "$HOMEROOT/Mango/build/rome");
     run("cp $HOME/config_override.php $buildDir/$flavor/sugarcrm");
+    run("gulp build", "cd $buildDir/$flavor/sugarcrm/sidecar/");
     run("curl -s 'http://$name.localdev/$name/$flavor/sugarcrm/install.php?goto=SilentInstall&cli=true'");
 }
 

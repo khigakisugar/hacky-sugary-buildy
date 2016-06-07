@@ -41,10 +41,13 @@ if (file_exists($sugarConfigFile)) {
 
 chdir("$HOMEROOT/Mango/build/rome");
 $buildcommand = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php ver=$defaultversion flav=$defaultflavor build_dir=$HOMEROOT/Sites/$defaultname dir=$HOMEROOT/Mango/$filerelativedir --clean=1 --cleanCache=1";
-if ($sidecar) {
-    $buildcommand .= ' --sidecar=1';
-}
 fwrite(STDERR, "running $buildcommand" . PHP_EOL);
 shell_exec("$buildcommand");
+if ($sidecar) {
+    $sidecarDir = "$HOMEROOT/Sites/$defaultname/$defaultflavor/sugarcrm/sidecar";
+    fwrite(STDERR, "building gulp at $sidecarDir" . PHP_EOL);
+    chdir($sidecarDir);
+    shell_exec("gulp build");
+}
 fwrite(STDERR, "finished at " . date('h:i:s A') . PHP_EOL);
 ?>
