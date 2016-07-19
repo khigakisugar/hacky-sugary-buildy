@@ -39,7 +39,7 @@ $sidecar = strpos($filerelativedir, 'sidecar');
 // build sidecar
 if ($sidecar !== false) {
     fwrite(STDERR, "building sidecar file" . PHP_EOL);
-    $sidecarCopy = "cp $HOMEROOT/Mango/$filerelativedir $installDir/$filerelativedir";
+    $sidecarCopy = "rsync -av --exclude=*/.git* $HOMEROOT/Mango/$filerelativedir $installDir/$filerelativedir";
     fwrite(STDERR, "running $sidecarCopy" . PHP_EOL);
     shell_exec($sidecarCopy);
     $sidecarDir = "$HOMEROOT/Sites/$defaultname/$defaultflavor/sugarcrm/sidecar";
