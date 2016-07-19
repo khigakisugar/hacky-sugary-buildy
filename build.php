@@ -52,22 +52,17 @@ function theMain() {
 
     // Open a browser window
     run("/usr/bin/open -a '/Applications/Google Chrome.app' --new --args 'http://$name.localdev/$name/$flavor/sugarcrm/'");
-
-    // Set permissions on grunt-cli
-    run("chmod u+x $HOMEROOT/Sites/$name/$flavor/sugarcrm/sidecar/node_modules/grunt-cli/bin/grunt");
-    run("chmod u+x $HOMEROOT/Sites/$name/$flavor/sugarcrm/node_modules/grunt-cli/bin/grunt");
-
-    // Run tests
-    // Commented out, since running tests right after tends to cause file handle issues
-    //run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm/sidecar");
-    //run("./node_modules/grunt-cli/bin/grunt karma:ci", "$HOMEROOT/Mango/sugarcrm");
 }
 
 // run composer
 function updateDependencies($flavor, $version) {
     global $HOMEROOT;
     $loc = "$HOMEROOT/Mango/sugarcrm";
+    run("mv /usr/local/etc/php/5.4/conf.d/ext-xdebug.ini /usr/local/etc/php/5.4/conf.d/ext-xdebug.ini.bak", $loc);
     run("composer install", $loc);
+    run("mv /usr/local/etc/php/5.4/conf.d/ext-xdebug.ini.bak /usr/local/etc/php/5.4/conf.d/ext-xdebug.ini", $loc);
+    run("npm install", $loc);
+    run("npm install", "$loc/sidecar");
 }
 
 function promptUser($prompt, $allowedValues=NULL, $default=NULL) {
@@ -202,7 +197,7 @@ function runBuild($version, $flavor, $name) {
     $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache";
     run("$buildscript", "$HOMEROOT/Mango/build/rome");
     run("cp $HOME/config_override.php $buildDir/$flavor/sugarcrm");
-    run("gulp build", "cd $buildDir/$flavor/sugarcrm/sidecar/");
+    run("gulp build", "$buildDir/$flavor/sugarcrm/sidecar/");
     run("curl -s 'http://$name.localdev/$name/$flavor/sugarcrm/install.php?goto=SilentInstall&cli=true'");
 }
 

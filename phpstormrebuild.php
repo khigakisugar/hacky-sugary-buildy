@@ -4,10 +4,6 @@ date_default_timezone_set('America/Los_Angeles');
 $HOMEROOT = getenv('HOME');
 $HOME = realpath(__DIR__);
 $filerelativedir = $argv[1];
-$sidecar = null;
-if (count($argv) > 2) {
-    $sidecar = $argv[2];
-}
 
 $defaultsfile = "$HOME/sugarbuildconfig.ini";
 $namefile = "$HOME/currentbranch";
@@ -39,15 +35,26 @@ if (file_exists($sugarConfigFile)) {
     $defaultversion = $sugar_config['sugar_version'];
 }
 
-chdir("$HOMEROOT/Mango/build/rome");
-$buildcommand = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php ver=$defaultversion flav=$defaultflavor build_dir=$HOMEROOT/Sites/$defaultname dir=$HOMEROOT/Mango/$filerelativedir --clean=1 --cleanCache=1";
-fwrite(STDERR, "running $buildcommand" . PHP_EOL);
-shell_exec("$buildcommand");
-if ($sidecar) {
+$sidecar = strpos($filerelativedir, 'sidecar');
+// build sidecar
+if ($sidecar !== false) {
+    fwrite(STDERR, "building sidecar file" . PHP_EOL);
+    $sidecarCopy = "cp $HOMEROOT/Mango/$filerelativedir $installDir/$filerelativedir";
+    fwrite(STDERR, "running $sidecarCopy" . PHP_EOL);
+    shell_exec($sidecarCopy);
     $sidecarDir = "$HOMEROOT/Sites/$defaultname/$defaultflavor/sugarcrm/sidecar";
     fwrite(STDERR, "building gulp at $sidecarDir" . PHP_EOL);
     chdir($sidecarDir);
     shell_exec("gulp build");
+
+// build Mango
+} else {
+    fwrite(STDERR, "building mango file" . PHP_EOL);
+    chdir("$HOMEROOT/Mango/build/rome");
+    $buildcommand = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php ver=$defaultversion flav=$defaultflavor build_dir=$HOMEROOT/Sites/$defaultname dir=$HOMEROOT/Mango/$filerelativedir --clean=1 --cleanCache=1";
+    fwrite(STDERR, "running $buildcommand" . PHP_EOL);
+    shell_exec($buildcommand);
 }
+
 fwrite(STDERR, "finished at " . date('h:i:s A') . PHP_EOL);
 ?>
