@@ -26,7 +26,7 @@ function theMain() {
 
     // update ini file
     err_log("updating defaults: version=$version, flavor=$flavor, password=$dbpword");
-    setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile);
+    setDefaults($defaultsfile, $version, $flavor, $name, $dbpword);
 
     // remove the existing install (if it exists)
     err_log("checking if this has already been installed at /Users/khigaki/Sites/$name/$flavor");
@@ -57,9 +57,9 @@ function theMain() {
 function updateDependencies($flavor, $version) {
     global $HOMEROOT;
     $loc = "$HOMEROOT/Mango/sugarcrm";
-    run("mv /usr/local/etc/php/5.4/conf.d/ext-xdebug.ini /usr/local/etc/php/5.4/conf.d/ext-xdebug.ini.bak", $loc);
+    run("mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini.bak", $loc);
     run("composer install", $loc);
-    run("mv /usr/local/etc/php/5.4/conf.d/ext-xdebug.ini.bak /usr/local/etc/php/5.4/conf.d/ext-xdebug.ini", $loc);
+    run("mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini.bak /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini", $loc);
     run("npm install", $loc);
     run("npm install", "$loc/sidecar");
 }
@@ -121,30 +121,23 @@ function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL, $name) {
     $branchName = promptUser("Branch name [$name]: ", NULL, $name);
 
     $demoData = convertYNToBoolean(promptUser("Demo Data? (y/N): ", $YNARRAY, 'n'));
-    $branchName = str_replace("-", "_", $branchName);
 
     return array($version, $flavor, $branchName, $demoData);
 }
 
 function getDefaultName() {
+    global $HOMEROOT;
     chdir("$HOMEROOT/Mango/sugarcrm");
-    return shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* //'");
+    return trim(shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* //'"));
 }
 
-function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile) {
+function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword) {
     $defaultsrewrite = fopen($defaultsfile, 'w');
     fwrite($defaultsrewrite, '[sugar]'. PHP_EOL);
     fwrite($defaultsrewrite, "version=$version" . PHP_EOL);
     fwrite($defaultsrewrite, "flavor=$flavor" . PHP_EOL);
     fwrite($defaultsrewrite, "dbpword=$dbpword" . PHP_EOL);
     fclose($defaultsrewrite);
-    if ($name) {
-        $name = trim($name);
-        $name = explode('~', $name)[0];
-        $namewrite = fopen($namefile, 'w');
-        fwrite($namewrite, $name);
-        fclose($namewrite);
-    }
 }
 
 function updateConfigSi($flavor, $version, $name, $demoData, $key) {

@@ -5,6 +5,7 @@ $flav = '<FLAV>';
 $name = '<NAME>';
 $demoData = <DEMO>;
 $key = '<KEY>';
+$dbName = str_replace('-', '_', $name) . "_$flav";
 
 $sugar_config_si = array (
   'setup_db_host_name' => 'localhost',
@@ -12,7 +13,7 @@ $sugar_config_si = array (
   'setup_db_admin_user_name' => 'root',
   'setup_db_pop_demo_data' => '0',
   'setup_system_name' => 'SugarCRM',
-  'setup_db_database_name' => "sugar_$name"."_$flav",
+  'setup_db_database_name' => "sugar_$dbName",
   'export_delimiter' => ',',
   'default_language' => 'en_us',
   'default_currency_name' => 'US Dollar',
