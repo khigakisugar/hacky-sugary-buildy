@@ -6,7 +6,6 @@ $HOME = realpath(__DIR__);
 $filerelativedir = $argv[1];
 
 $defaultsfile = "$HOME/sugarbuildconfig.ini";
-$namefile = "$HOME/currentbranch";
 $defaults = array('version' => '', 'flavor' => '', 'name' => '');
 if (file_exists($defaultsfile)) {
     $defaults = parse_ini_file($defaultsfile);
@@ -14,15 +13,10 @@ if (file_exists($defaultsfile)) {
     die("defaults file $defaultsfile does not exist");
 }
 
-$defaultname = '';
-if (file_exists($namefile)) {
-    $defaultname = file_get_contents($namefile);
-} else {
-    die("name file $namefile does not exist");
-}
-
+chdir("$HOMEROOT/Mango");
+//$defaultname = shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'");
+$defaultname = shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* //'");
 $defaultname = trim($defaultname);
-$defaultname = explode('~', $defaultname)[0];
 
 $defaultversion = $defaults['version'];
 $defaultflavor = $defaults['flavor'];

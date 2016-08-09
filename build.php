@@ -12,11 +12,10 @@ function theMain() {
     // get the default values from the ini file
     err_log("pulling defaults from ini file");
     $defaultsfile = "$HOME/sugarbuildconfig.ini";
-    $namefile = "$HOME/currentbranch";
     $keyfile = "$HOME/license.ini";
     $key = '';
     list($defaultversion, $defaultflavor, $dbpword) = getDefaults($defaultsfile);
-    $name = getDefaultName($namefile);
+    $name = getDefaultName();
     if (file_exists($keyfile)) {
         $key = parse_ini_file($keyfile)['key'];
     }
@@ -127,10 +126,9 @@ function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL, $name) {
     return array($version, $flavor, $branchName, $demoData);
 }
 
-function getDefaultName($namefile) {
-    if (file_exists($namefile)) {
-       return rtrim(file_get_contents($namefile));
-    }
+function getDefaultName() {
+    chdir("$HOMEROOT/Mango/sugarcrm");
+    return shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* //'");
 }
 
 function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword, $namefile) {
