@@ -10,18 +10,22 @@ $defaults = array('version' => '', 'flavor' => '', 'name' => '');
 if (file_exists($defaultsfile)) {
     $defaults = parse_ini_file($defaultsfile);
 } else {
-    die("defaults file $defaultsfile does not exist");
+    fwrite(STDERR, PHP_EOL . "DIE: defaults file $defaultsfile was eaten by a grue." . PHP_EOL);
+    die();
 }
 
 chdir("$HOMEROOT/Mango");
-//$defaultname = shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'");
-$defaultname = shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* //'");
+$defaultname = shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* //' -e 's/.*\///' -e 's/)//'");
 $defaultname = trim($defaultname);
 
 $defaultversion = $defaults['version'];
 $defaultflavor = $defaults['flavor'];
 
 $installDir = "/Users/khigaki/Sites/$defaultname/$defaultflavor";
+if (!file_exists($installDir)) {
+    fwrite(STDERR, PHP_EOL . "DIE: $installDir was eaten by a grue." . PHP_EOL);
+    die();
+}
 
 $sugarConfigFile = "$installDir/sugarcrm/config.php";
 if (file_exists($sugarConfigFile)) {

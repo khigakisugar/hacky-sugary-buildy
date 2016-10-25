@@ -60,14 +60,17 @@ function updateDependencies($flavor, $version) {
     run("mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini.bak", $loc);
     run("composer install", $loc);
     run("mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini.bak /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini", $loc);
-    run("npm install", $loc);
-    run("npm install", "$loc/sidecar");
+    run("yarn install", $loc);
+    run("yarn install", "$loc/sidecar");
 }
 
-function promptUser($prompt, $allowedValues=NULL, $default=NULL) {
+function promptUser($prompt, $allowedValues=NULL, $default=NULL, $lower=TRUE) {
     // loop until a valid answer is provided
     while (true) {
-        $userValue = strtolower(readline($prompt));
+        $userValue = readline($prompt);
+        if ($lower) {
+            $userValue = strtolower($userValue);
+        }
         // if answer is an empty string and default is specified, return default
         if (($userValue == "") && $default){
             err_log("defaulting to $default");
@@ -118,7 +121,7 @@ function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL, $name) {
 
     $version = promptUser("Version [$defaultversion]: ", NULL, $defaultversion);
     $flavor = promptUser("Flavor (pro, ent, ult): [$defaultflavor] ", $FLAVORARRAY, $defaultflavor);
-    $branchName = promptUser("Branch name [$name]: ", NULL, $name);
+    $branchName = promptUser("Branch name [$name]: ", NULL, $name, FALSE);
 
     $demoData = convertYNToBoolean(promptUser("Demo Data? (y/N): ", $YNARRAY, 'n'));
 
@@ -128,7 +131,7 @@ function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL, $name) {
 function getDefaultName() {
     global $HOMEROOT;
     chdir("$HOMEROOT/Mango/sugarcrm");
-    return trim(shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* //'"));
+    return trim(shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* //' -e 's/.*\///' -e 's/)//'"));
 }
 
 function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword) {
@@ -183,8 +186,6 @@ function runBuild($version, $flavor, $name) {
     if (file_exists($buildDir)) {
         run("rm -r $buildDir");
     }
-    //$buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --latin=1 --clean --cleanCache --sidecar";
-    //$buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache --sidecar";
     $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache";
     run("$buildscript", "$HOMEROOT/Mango/build/rome");
     run("cp $HOME/config_override.php $buildDir/$flavor/sugarcrm");
