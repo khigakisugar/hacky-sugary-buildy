@@ -44,7 +44,7 @@ function theMain() {
     updateDependencies($flavor, $version);
 
     // Run the build
-    runBuild($version, $flavor, $name);
+    runBuild($version, $flavor, $name, $demoData);
 
     // restart mysql
     run("mysql.server restart");
@@ -60,8 +60,8 @@ function updateDependencies($flavor, $version) {
     run("mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini.bak", $loc);
     run("composer install", $loc);
     run("mv /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini.bak /usr/local/etc/php/5.6/conf.d/ext-xdebug.ini", $loc);
-    run("yarn install", $loc);
-    run("yarn install", "$loc/sidecar");
+    run("npm install", $loc);
+    run("npm install", "$loc/sidecar");
 }
 
 function promptUser($prompt, $allowedValues=NULL, $default=NULL, $lower=TRUE) {
@@ -123,7 +123,7 @@ function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL, $name) {
     $flavor = promptUser("Flavor (pro, ent, ult): [$defaultflavor] ", $FLAVORARRAY, $defaultflavor);
     $branchName = promptUser("Branch name [$name]: ", NULL, $name, FALSE);
 
-    $demoData = convertYNToBoolean(promptUser("Demo Data? (y/N): ", $YNARRAY, 'n'));
+    $demoData = convertYNToBoolean(promptUser("Demo Data and Lang? (y/N): ", $YNARRAY, 'n'));
 
     return array($version, $flavor, $branchName, $demoData);
 }
@@ -180,13 +180,16 @@ function updateSubmodules() {
     run("git submodule update", "$HOMEROOT/Mango");
 }
 
-function runBuild($version, $flavor, $name) {
+function runBuild($version, $flavor, $name, $demoData) {
     global $HOME, $HOMEROOT;
     $buildDir = "$HOMEROOT/Sites/$name";
     if (file_exists($buildDir)) {
         run("rm -r $buildDir");
     }
     $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache";
+    if ($demoData) {
+        $buildscript = $buildscript . ' --latin=1';
+    }
     run("$buildscript", "$HOMEROOT/Mango/build/rome");
     run("cp $HOME/config_override.php $buildDir/$flavor/sugarcrm");
     run("gulp build", "$buildDir/$flavor/sugarcrm/sidecar/");
