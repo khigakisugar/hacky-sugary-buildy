@@ -49,7 +49,7 @@ if ($sidecar !== false) {
 } else {
     fwrite(STDERR, "building mango file" . PHP_EOL);
     chdir("$HOMEROOT/Mango/build/rome");
-    $buildcommand = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php ver=$defaultversion flav=$defaultflavor build_dir=$HOMEROOT/Sites/$defaultname dir=$HOMEROOT/Mango/$filerelativedir --clean=1 --cleanCache=1";
+    $buildcommand = "/usr/local/bin/php $HOMEROOT/Mango/build/rome/build.php ver=$defaultversion flav=$defaultflavor build_dir=$HOMEROOT/Sites/$defaultname dir=$HOMEROOT/Mango/$filerelativedir --clean=1 --cleanCache=1";
     fwrite(STDERR, "running $buildcommand" . PHP_EOL);
     shell_exec($buildcommand);
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/local/bin/php
 <?php
 
 $HOMEROOT = getenv("HOME");
@@ -131,7 +131,9 @@ function getAllUserInput($defaultversion=NULL, $defaultflavor=NULL, $name) {
 function getDefaultName() {
     global $HOMEROOT;
     chdir("$HOMEROOT/Mango/sugarcrm");
-    return trim(shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* //' -e 's/.*\///' -e 's/)//'"));
+    $name =  trim(shell_exec("git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* //' -e 's/.*\///' -e 's/)//'"));
+    $name = str_replace('_', '-', $name);
+    return $name;
 }
 
 function setDefaults($defaultsfile, $version, $flavor, $name, $dbpword) {
@@ -186,7 +188,7 @@ function runBuild($version, $flavor, $name, $demoData) {
     if (file_exists($buildDir)) {
         run("rm -r $buildDir");
     }
-    $buildscript = "/usr/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache";
+    $buildscript = "/usr/local/bin/php $HOMEROOT/Mango/build/rome/build.php --ver=$version --flav=$flavor --dir=$HOMEROOT/Mango --build_dir=$buildDir --clean --cleanCache";
     if ($demoData) {
         $buildscript = $buildscript . ' --latin=1';
     }
