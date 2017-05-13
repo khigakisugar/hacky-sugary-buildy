@@ -1,3 +1,5 @@
+This documentation is really old and not entirely trustworthy.
+
 # hacky-sugary-buildy
 ## About
 A wrapper around existing build tools
